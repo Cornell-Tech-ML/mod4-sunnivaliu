@@ -38,7 +38,7 @@ The files that will be synced are:
 
 * Task 4.4_b:
 
-I have created test_cuda_conv.py and cuda_conv.py, respectively.
+I have created test_cuda_conv.py and cuda_conv.py, respectively. I put it outside its orignal minitorch folder and test folder for quicker access, but also for passing the Style check on Github (" 2 files reformatted, 24 files left unchanged")
 Here's the output in colab in comparing the result from CPU (torch implementation), and GPU (CUDA)
 
 <img src="task44b.png" width="75%">
