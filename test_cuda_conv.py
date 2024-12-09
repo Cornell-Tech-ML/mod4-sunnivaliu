@@ -47,7 +47,6 @@
 #     assert_close(cpu_output, cuda_output)
 
 
-
 # @pytest.mark.cudaTest
 # def test_conv2d() -> None:
 #     """Test CUDA implementation of conv2d against NumPy-based CPU results."""

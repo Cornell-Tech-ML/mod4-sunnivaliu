@@ -3,6 +3,7 @@ from numba import cuda
 from .tensor import Tensor
 import numpy as np
 
+
 @cuda.jit
 def conv1d_kernel(out, input, weights, stride, padding) -> None:  # noqa: ANN001, ANN201
     """CUDA kernel for 1D convolution."""
@@ -16,7 +17,8 @@ def conv1d_kernel(out, input, weights, stride, padding) -> None:  # noqa: ANN001
                     value += input[b, ic, iw] * weights[oc, ic, kw]
         out[b, oc, ow] = value
 
-def conv1d(input: Tensor, weights: Tensor, stride:int=1, padding:int=0) -> Tensor:
+
+def conv1d(input: Tensor, weights: Tensor, stride: int = 1, padding: int = 0) -> Tensor:
     """Perform 1D convolution using CUDA."""
     batch, in_channels, width = input.shape
     out_channels, _, kernel_width = weights.shape
@@ -30,12 +32,14 @@ def conv1d(input: Tensor, weights: Tensor, stride:int=1, padding:int=0) -> Tenso
         (out_channels + threads_per_block[1] - 1) // threads_per_block[1],
         (output_width + threads_per_block[2] - 1) // threads_per_block[2],
     )
-    conv1d_kernel[blocks_per_grid, threads_per_block](out, input, weights, stride, padding)
+    conv1d_kernel[blocks_per_grid, threads_per_block](
+        out, input, weights, stride, padding
+    )
 
     return out
 
 
-def conv1d(input: Tensor, weights: Tensor, stride:int=1, padding:int=0) -> Tensor:  # noqa: F811
+def conv1d(input: Tensor, weights: Tensor, stride: int = 1, padding: int = 0) -> Tensor:  # noqa: F811
     """Perform 1D convolution using CUDA."""
     batch, in_channels, width = input.shape
     out_channels, _, kernel_width = weights.shape
@@ -49,7 +53,9 @@ def conv1d(input: Tensor, weights: Tensor, stride:int=1, padding:int=0) -> Tenso
         (out_channels + threads_per_block[1] - 1) // threads_per_block[1],
         (output_width + threads_per_block[2] - 1) // threads_per_block[2],
     )
-    conv1d_kernel[blocks_per_grid, threads_per_block](out, input, weights, stride, padding)
+    conv1d_kernel[blocks_per_grid, threads_per_block](
+        out, input, weights, stride, padding
+    )
 
     return out
 
@@ -76,8 +82,11 @@ def conv2d_kernel(out, input, weights, stride, padding, batch, out_channels) -> 
 
         # Write result to the output array
         out[b, oc, oh, ow] = value
-  
-def conv2d(input: np.ndarray, weights: np.ndarray, stride: int = 1, padding: int = 0) -> np.ndarray:
+
+
+def conv2d(
+    input: np.ndarray, weights: np.ndarray, stride: int = 1, padding: int = 0
+) -> np.ndarray:
     """Perform 2D convolution using CUDA."""
     batch, in_channels, height, width = input.shape
     out_channels, _, kernel_height, kernel_width = weights.shape
@@ -93,7 +102,7 @@ def conv2d(input: np.ndarray, weights: np.ndarray, stride: int = 1, padding: int
     combined_dim = batch * out_channels
 
     # Define threads per block and blocks per grid
-    threads_per_block = (16, 16, 1)  
+    threads_per_block = (16, 16, 1)
     blocks_per_grid = (
         (combined_dim + threads_per_block[0] - 1) // threads_per_block[0],
         (output_height + threads_per_block[1] - 1) // threads_per_block[1],
