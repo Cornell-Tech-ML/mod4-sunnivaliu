@@ -40,7 +40,7 @@ The files that will be synced are:
 
 I have created test_cuda_conv.py and cuda_conv.py, respectively. I put it outside minitorch/ and tests/ folder due to style check ("- hook id: ruff-format - files were modified by this hook, 2 files reformatted, 24 files left unchanged")
 
-Here's the output in Colab in comparing the result from CPU (torch implementation), and GPU (CUDA)
+Here's the output in Colab in comparing the result from CPU (numpy implementation), and GPU (CUDA implementation)
 
 <img src="task44b.png" width="75%">
 
