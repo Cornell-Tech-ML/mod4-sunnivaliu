@@ -1,3 +1,5 @@
+# type: ignore
+
 import random
 
 import embeddings
@@ -35,7 +37,7 @@ class Conv1d(minitorch.Module):
 
     def forward(self, input):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        return minitorch.conv1d(input, self.weights.value) + self.bias.value
 
 
 class CNNSentimentKim(minitorch.Module):
@@ -62,15 +64,28 @@ class CNNSentimentKim(minitorch.Module):
         super().__init__()
         self.feature_map_size = feature_map_size
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        self.conv1 = Conv1d(embedding_size, feature_map_size, filter_sizes[0])
+        self.conv2 = Conv1d(embedding_size, feature_map_size, filter_sizes[1])
+        self.conv3 = Conv1d(embedding_size, feature_map_size, filter_sizes[2])
+        self.linear = Linear(feature_map_size, 1)
+        self.dropout = dropout
 
     def forward(self, embeddings):
         """
         embeddings tensor: [batch x sentence length x embedding dim]
         """
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
-
+        # permute embedding dim to input channels dim for conv layer
+        x = embeddings.permute(0, 2, 1)
+        x1 = self.conv1(x).relu()
+        x2 = self.conv2(x).relu()
+        x3 = self.conv3(x).relu()
+        # Max over each feature map
+        x = minitorch.max(x1, 2) + minitorch.max(x2, 2) + minitorch.max(x3, 2)
+        x = self.linear(x.view(x.shape[0], self.feature_map_size))
+        x = minitorch.dropout(x, self.dropout)
+        # Apply sigmoid and view as batch size
+        return x.sigmoid().view(x.shape[0])
 
 # Evaluation helper methods
 def get_predictions_array(y_true, model_output):
@@ -252,18 +267,81 @@ def encode_sentiment_data(dataset, pretrained_embeddings, N_train, N_val=0):
     return (X_train, y_train), (X_val, y_val)
 
 
+def load_glove_embeddings(path="data/glove/glove.6B.50d.txt"):
+    """Load GloVe embeddings from local file.
+
+    Args:
+    ----
+        path: Path to the GloVe embeddings file
+
+    Returns:
+    -------
+        dict: Word to embedding mapping
+    """
+    word2emb = {}
+    with open(path, 'r', encoding='utf-8') as f:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            vector = [float(x) for x in values[1:]]
+            word2emb[word] = vector
+    return word2emb
+
+
+
+class GloveEmbedding:
+    """Simple wrapper class to mimic the original GloveEmbedding interface."""
+
+    def __init__(self, word2emb):
+        self.word2emb = word2emb
+        # Get embedding dimension from first entry
+        self.d_emb = len(next(iter(word2emb.values())))
+
+    def emb(self, word, default=None):
+        """Get embedding for a word.
+
+        Args:
+        ----
+            word: Word to get embedding for
+            default: Default value if word not found
+
+        Returns:
+        -------
+            list: Embedding vector
+        """
+        return self.word2emb.get(word, default)
+
+    def __contains__(self, word):
+        """Support for 'in' operator.
+
+        Args:
+        ----
+            word: Word to check
+
+        Returns:
+        -------
+            bool: True if word is in embeddings
+        """
+        return word in self.word2emb
+
+
+
 if __name__ == "__main__":
     train_size = 450
     validation_size = 100
     learning_rate = 0.01
     max_epochs = 250
 
+    # Replace the embeddings initialization line with:
+    word2emb = load_glove_embeddings()
+
     (X_train, y_train), (X_val, y_val) = encode_sentiment_data(
         load_dataset("glue", "sst2"),
-        embeddings.GloveEmbedding("wikipedia_gigaword", d_emb=50, show_progress=True),
+        GloveEmbedding(word2emb), # embeddings.GloveEmbedding("wikipedia_gigaword", d_emb=50, show_progress=True),
         train_size,
-        validation_size,
+        validation_size
     )
+
     model_trainer = SentenceSentimentTrain(
         CNNSentimentKim(feature_map_size=100, filter_sizes=[3, 4, 5], dropout=0.25)
     )

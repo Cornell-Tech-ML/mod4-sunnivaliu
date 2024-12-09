@@ -1,8 +1,12 @@
+# type: ignore
+
 import pytest
 from hypothesis import given
 
 import minitorch
-from minitorch import Tensor
+from minitorch import (
+    Tensor,
+)  # , avgpool2d, max, maxpool2d, dropout, softmax, logsoftmax
 
 from .strategies import assert_close
 from .tensor_strategies import tensors
@@ -31,8 +35,33 @@ def test_avg(t: Tensor) -> None:
 @pytest.mark.task4_4
 @given(tensors(shape=(2, 3, 4)))
 def test_max(t: Tensor) -> None:
-    # TODO: Implement for Task 4.4.
-    raise NotImplementedError("Need to implement for Task 4.4")
+    """Test max reduction forward"""
+    # Compute max along axis 2
+    out = minitorch.max(t, dim=2)
+
+    # Verify correctness of maximum values
+    for b in range(t.shape[0]):  # Iterate over batch
+        for c in range(t.shape[1]):  # Iterate over channels
+            expected_max = -float("inf")
+            for k in range(t.shape[2]):  # Iterate over height dimension
+                expected_max = max(expected_max, t[b, c, k])
+            assert out[b, c, 0] == expected_max
+
+
+@pytest.mark.task4_4
+def test_max_backwards() -> None:
+    """Test max reduction backward"""
+    # Generate a random tensor
+    t = minitorch.rand((2, 3, 4), requires_grad=True)
+
+    # Define a simple function using max
+    def func(x: Tensor) -> Tensor:
+        return minitorch.max(
+            x, dim=2
+        ).sum()  # Sum ensures a scalar output for grad check
+
+    # Perform gradient check
+    minitorch.grad_check(func, t)
 
 
 @pytest.mark.task4_4

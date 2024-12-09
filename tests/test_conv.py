@@ -1,3 +1,5 @@
+# type: ignore
+
 import pytest
 from hypothesis import given, settings
 
