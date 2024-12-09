@@ -5,8 +5,6 @@
 # from numba import cuda  # noqa: E402
 # from cuda_ops import conv1d, conv2d  # noqa: E402, F811
 
-
-
 # def assert_close(array1, array2, atol=1e-6) -> None:  # noqa: ANN001
 #     """Assert that two NumPy arrays are numerically close."""
 #     assert np.allclose(array1, array2, atol=atol), "Mismatch between CPU and CUDA results"
